@@ -1,12 +1,17 @@
 def preprocess(filename) :
 
     import pandas as pd
+    from sklearn.model_selection import train_test_split
 
     dataset = pd.read_csv(filename)
     X = dataset.iloc[:, 1:-1].values
     y = dataset.iloc[:, -1].values
 
-    return X, y
+    y = y.reshape(len(y),1)
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
+
+    return X_train, X_test, y_train, y_test
 
 def scale_feature(X) :
     from sklearn.preprocessing import StandardScaler
@@ -56,38 +61,45 @@ def hidef_scatter (X,y,regressor,title) :
     plt.show()
     return True
 
-def support_vector_regress(X,y) :
+def support_vector_regress(X,y,X_test) :
     y = y.reshape(len(y),1)
     X, sc_X = scale_feature(X)
     y, sc_y = scale_feature(y)
 
     regressor = sv_regress('rbf',X,y)
 
-    result = sc_y.inverse_transform(regressor.predict(sc_X.transform([[6.5]])))
-
+    y_pred = sc_y.inverse_transform(regressor.predict(sc_X.transform(X_test)))
+    """
     scatter(
         sc_X.inverse_transform(X),
         sc_y.inverse_transform(y),
         sc_y.inverse_transform(regressor.predict(X)),
         'Support Vector Regression'
     )
-    return True
+    """
+    return regressor, y_pred
 
+from sklearn.metrics import r2_score
 
-X, y = preprocess('Position_Salaries.csv')
+X_train, X_test, y_train, y_test = preprocess('Data.csv')
 
-"""
+tree_regressor = tree_regress(X_train,y_train)
+tree_y_pred = tree_regressor.predict(X_test)
+#title = 'Decision Tree Regression'
 
-regressor = tree_regress(X,y)
-title = 'Decision Tree Regression'
+forest_regressor = random_forest_regress(X_train,y_train)
+forest_y_pred = forest_regressor.predict(X_test)
+#title = 'Random Forest Regression'
 
-"""
+#hidef_scatter(X_train,y_train,regressor,title)
 
-regressor = random_forest_regress(X,y)
-title = 'Random Forest Regression'
-
-
-hidef_scatter(X,y,regressor,title)
-
-
-#Support Vector Regression
+sv_regressor, sv_y_pred = support_vector_regress(X_train,y_train,X_test)
+print("Supoort Vector")
+r2_score_sv = r2_score(y_test, sv_y_pred)
+print(r2_score_sv)
+print('Decision Tree')
+r2_score_tree = r2_score(y_test, tree_y_pred)
+print(r2_score_tree)
+print('Random Forest')
+r2_score_forest = r2_score(y_test, forest_y_pred)
+print(r2_score_forest)

@@ -2,13 +2,14 @@ def preprocess(filename) :
 
     import pandas as pd
     from sklearn.model_selection import train_test_split
-    import linear
 
     dataset = pd.read_csv(filename)
     X = dataset.iloc[:, 1:-1].values
     y = dataset.iloc[:, -1].values
 
-    return X, y
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 0)
+
+    return X_train, X_test, y_train, y_test
 
 def regress(X_train,y_train) :
 
@@ -34,10 +35,18 @@ def poly_regress(X,y) :
 
 
 import numpy as np
+from sklearn.metrics import r2_score
 import linear
 
-X,y = preprocess('Position_Salaries.csv')
-regressor = regress(X,y)
-p_lin_regressor, poly_regressor = poly_regress(X,y)
+X_train, X_test, y_train, y_test = preprocess('Data.csv')
 
-linear.scatter(X,y,p_lin_regressor,poly_regressor.fit_transform(X))
+#regressor = regress(X_train,y_train)
+p_lin_regressor, poly_regressor = poly_regress(X_train,y_train)
+y_pred = p_lin_regressor.predict(poly_regressor.transform(X_test))
+
+
+score = r2_score(y_test, y_pred)
+print("Polynomial")
+print(score)
+
+#linear.scatter(X_train,y_train,p_lin_regressor,poly_regressor.fit_transform(X_train))
